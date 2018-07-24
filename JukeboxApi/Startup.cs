@@ -27,8 +27,19 @@ namespace JukeboxApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<SuggestionContext>(opt =>
-                opt.UseInMemoryDatabase("Suggestion"));
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
+            {
+                services.AddDbContext<SuggestionContext>(opt =>
+                    opt.UseSqlServer("Server=tcp:jukebox-api.database.windows.net,1433;Initial Catalog=jukebox-api;Persist Security Info=False;User ID={your_username};Password={your_password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"));
+            }
+            else
+            {
+                services.AddDbContext<SuggestionContext>(opt =>
+                    opt.UseInMemoryDatabase("Suggestion"));
+            }
+
+            services.BuildServiceProvider().GetService<SuggestionContext>().Database.Migrate();
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
