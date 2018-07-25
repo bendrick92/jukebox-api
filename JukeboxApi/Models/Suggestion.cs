@@ -12,5 +12,7 @@ namespace JukeboxApi.Models
         public string ArtistName { get; set; }
 
         public DateTime Added { get; set; }
+
+        public bool IsActive { get; set; }
     }
 }

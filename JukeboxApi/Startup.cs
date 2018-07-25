@@ -42,8 +42,6 @@ namespace JukeboxApi
                     opt.UseInMemoryDatabase("Suggestion"));
             }
 
-            services.BuildServiceProvider().GetService<SuggestionContext>().Database.Migrate();
-
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
