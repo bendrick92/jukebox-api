@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using JukeboxApi.Models;
+using Microsoft.AspNetCore.Cors;
 
 namespace JukeboxApi
 {
@@ -42,12 +43,16 @@ namespace JukeboxApi
                     opt.UseInMemoryDatabase("Suggestion"));
             }
 
+            services.AddCors();
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -55,6 +60,27 @@ namespace JukeboxApi
             else
             {
                 app.UseHsts();
+            }
+
+            if (environment != null && environment == "Production")
+            {
+                app.UseCors(builder =>
+                {
+                    builder.AllowAnyHeader();
+                    builder.AllowAnyMethod();
+                    builder.AllowCredentials();
+                    builder.WithOrigins("https://wardwalterswedding.com");
+                });
+            }
+            else
+            {
+                app.UseCors(builder =>
+                {
+                    builder.AllowAnyHeader();
+                    builder.AllowAnyMethod();
+                    builder.AllowCredentials();
+                    builder.WithOrigins("http://localhost");
+                });
             }
 
             app.UseHttpsRedirection();

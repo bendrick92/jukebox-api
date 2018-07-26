@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using JukeboxApi.Models;
 using System;
+using Microsoft.Extensions.Options;
+using System.Net.Http;
+using System.Net;
 
 namespace JukeboxApi.Controllers
 {
@@ -11,29 +14,16 @@ namespace JukeboxApi.Controllers
     public class SuggestionController : ControllerBase
     {
         private readonly SuggestionContext _context;
-
+        
         public SuggestionController(SuggestionContext context)
         {
             _context = context;
-
-            if (_context.Suggestions.Count() == 0)
-            {
-                _context.Suggestions.Add(new Suggestion
-                {
-                    SubmitterName = "Ben Walters",
-                    SongName = "Castle On The Hill",
-                    ArtistName = "Ed Sheeran",
-                    Added = DateTime.Now
-                });
-
-                _context.SaveChanges();
-            }
         }
 
         [HttpGet]
         public ActionResult<List<Suggestion>> GetAll()
         {
-            return _context.Suggestions.ToList();
+            return Ok(_context.Suggestions.ToList());
         }
 
         [HttpGet("{id}", Name = "GetSuggestion")]
@@ -46,18 +36,45 @@ namespace JukeboxApi.Controllers
                 return NotFound();
             }
 
-            return item;
+            return Ok(item);
         }
 
         [HttpPost]
-        public IActionResult Create(Suggestion suggestion)
+        public IActionResult Create([FromBody] SuggestionDto suggestionDto)
         {
-            suggestion.Added = DateTime.Now;
+            if (ModelState.IsValid)
+            {
+                if (RecaptchaResponseIsValid(suggestionDto.Recaptcha))
+                {
+                    Suggestion suggestion = new Suggestion();
+                    suggestion.SubmitterName = suggestionDto.SubmitterName;
+                    suggestion.SongName = suggestionDto.SongName;
+                    suggestion.ArtistName = suggestionDto.ArtistName;
+                    suggestion.Added = DateTime.Now;
+                    suggestion.IsActive = true;
 
-            _context.Suggestions.Add(suggestion);
-            _context.SaveChanges();
+                    _context.Suggestions.Add(suggestion);
+                    _context.SaveChanges();
 
-            return CreatedAtRoute("GetSuggestion", new { id = suggestion.Id }, suggestion);
+                    return Ok(suggestion);
+                }
+            }
+
+            return BadRequest();
+        }
+
+        private bool RecaptchaResponseIsValid(string recaptchaResponse)
+        {
+            string secret = Environment.GetEnvironmentVariable("RECAPTCHASECRET");
+
+            HttpClient httpClient = new HttpClient();
+            var response = httpClient.GetAsync($"https://www.google.com/recaptcha/api/siteverify?secret={secret}&response={recaptchaResponse}").Result;
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
