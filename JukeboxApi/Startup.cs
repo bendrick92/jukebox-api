@@ -35,7 +35,7 @@ namespace JukeboxApi
             if (environment != null && environment == "Production")
             {
                 services.AddDbContext<SuggestionContext>(opt =>
-                    opt.UseSqlServer($"Server=tcp:jukebox-api.database.windows.net,1433;Initial Catalog=jukebox-api;Persist Security Info=False;User ID={userId};Password={password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"));
+                    opt.UseSqlServer($"Server=tcp:jukebox-api-free.database.windows.net,1433;Initial Catalog=jukebox-api;Persist Security Info=False;User ID={userId};Password={password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"));
             }
             else
             {
